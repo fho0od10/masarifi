@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0a0a12">
+<title>مصاريفي ☁️ — مزامنة سحابية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root {
+    --bg:#0a0a12;--bg2:#111120;--bg3:#181828;--card:#1a1a2e;--card2:#1f1f35;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+    --text:#f0f0ff;--text2:#a0a0c0;--text3:#6060a0;
+    --accent:#6c63ff;--accent2:#8b85ff;--accent3:#4a44cc;
+    --green:#00d4a0;--red:#ff5c7a;--gold:#f5c842;--purple:#b060ff;--teal:#00c4d4;
+    --shadow:0 8px 32px rgba(0,0,0,0.4);--radius:18px;--radius2:12px;--radius3:8px;
+    --font:'IBM Plex Sans Arabic','Tajawal',sans-serif;--font2:'Tajawal',sans-serif;
+    --tr:all 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  .light-mode{
+    --bg:#f0f0f8;--bg2:#e8e8f4;--bg3:#dcdcee;--card:#fff;--card2:#f5f5ff;
+    --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.15);
+    --text:#1a1a2e;--text2:#4a4a70;--text3:#8080a0;
+    --shadow:0 8px 32px rgba(100,100,200,0.12);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;direction:rtl;overflow-x:hidden;transition:background .4s,color .4s;}
+  ::-webkit-scrollbar{width:5px;}
+  ::-webkit-scrollbar-track{background:var(--bg2);}
+  ::-webkit-scrollbar-thumb{background:var(--accent3);border-radius:3px;}
+
+  /* LOGIN SCREEN */
+  .login-screen{
+    position:fixed;inset:0;z-index:500;
+    background:var(--bg);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:28px;padding:30px;
+    transition:opacity .5s,transform .5s;
+  }
+  .login-screen.hide{opacity:0;pointer-events:none;transform:scale(1.04);}
+  .login-logo{
+    width:80px;height:80px;border-radius:22px;
+    background:linear-gradient(135deg,var(--accent),var(--purple));
+    display:flex;align-items:center;justify-content:center;
+    font-size:38px;box-shadow:0 12px 40px rgba(108,99,255,0.45);
+    animation:pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{box-shadow:0 12px 40px rgba(108,99,255,0.45);}50%{box-shadow:0 12px 60px rgba(108,99,255,0.7);}}
+  .login-title{font-family:var(--font2);font-size:32px;font-weight:800;background:linear-gradient(135deg,var(--accent2),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .login-sub{font-size:15px;color:var(--text2);text-align:center;line-height:1.8;max-width:320px;}
+  .login-features{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;}
+  .login-feature{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius2);padding:12px 16px;font-size:14px;color:var(--text2);}
+  .login-feature span:first-child{font-size:20px;}
+  .google-btn{
+    display:flex;align-items:center;gap:12px;
+    background:#fff;color:#1a1a1a;border:none;
+    border-radius:var(--radius2);padding:14px 28px;
+    font-size:15px;font-weight:600;cursor:pointer;
+    box-shadow:0 4px 20px rgba(0,0,0,0.25);
+    transition:var(--tr);font-family:var(--font);
+    width:100%;max-width:320px;justify-content:center;
+  }
+  .google-btn:hover{box-shadow:0 8px 30px rgba(0,0,0,0.35);transform:translateY(-2px);}
+  .google-btn img{width:22px;height:22px;}
+
+  /* TOPBAR */
+  .topbar{
+    position:sticky;top:0;z-index:100;
+    background:rgba(10,10,18,0.92);backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--border);
+    padding:0 16px;height:60px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .light-mode .topbar{background:rgba(240,240,248,0.93);}
+  .topbar-brand{display:flex;align-items:center;gap:10px;}
+  .brand-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:17px;}
+  .brand-name{font-family:var(--font2);font-size:19px;font-weight:800;background:linear-gradient(135deg,var(--accent2),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .topbar-right{display:flex;align-items:center;gap:8px;}
+  .month-badge{background:linear-gradient(135deg,var(--accent),var(--purple));color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap;}
+  .icon-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text2);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:var(--tr);}
+  .icon-btn:hover{background:var(--card2);color:var(--accent);border-color:var(--accent);}
+
+  /* SYNC INDICATOR */
+  .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);display:inline-block;margin-left:4px;transition:var(--tr);}
+  .sync-dot.syncing{background:var(--gold);animation:blink .8s ease-in-out infinite;}
+  .sync-dot.synced{background:var(--green);}
+  .sync-dot.error{background:var(--red);}
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+  .sync-label{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px;white-space:nowrap;}
+
+  /* USER AVATAR */
+  .user-avatar{width:32px;height:32px;border-radius:50%;border:2px solid var(--accent);cursor:pointer;object-fit:cover;}
+
+  /* MAIN */
+  .main{max-width:1100px;margin:0 auto;padding:18px 14px 90px;}
+
+  /* TABS */
+  .nav-tabs{display:flex;gap:5px;margin-bottom:20px;background:var(--card);border-radius:var(--radius);padding:5px;border:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+  .nav-tabs::-webkit-scrollbar{display:none;}
+  .nav-tab{flex:1;min-width:max-content;padding:9px 14px;border-radius:var(--radius2);border:none;background:transparent;color:var(--text2);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:var(--tr);white-space:nowrap;display:flex;align-items:center;gap:5px;justify-content:center;}
+  .nav-tab.active{background:linear-gradient(135deg,var(--accent),var(--purple));color:#fff;box-shadow:0 4px 12px rgba(108,99,255,0.35);}
+
+  /* PAGES */
+  .page{display:none;animation:fadeUp .3s ease;}
+  .page.active{display:block;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+  /* STATS */
+  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+  .stat-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:16px 14px;position:relative;overflow:hidden;transition:var(--tr);}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius) var(--radius) 0 0;}
+  .stat-card.expenses::before{background:linear-gradient(90deg,var(--red),#ff3d5e);}
+  .stat-card.savings::before{background:linear-gradient(90deg,var(--green),var(--teal));}
+  .stat-card.total::before{background:linear-gradient(90deg,var(--accent),var(--purple));}
+  .stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
+  .stat-label{font-size:11px;color:var(--text3);font-weight:500;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+  .stat-value{font-size:20px;font-weight:700;font-family:var(--font2);}
+  .stat-card.expenses .stat-value{color:var(--red);}
+  .stat-card.savings .stat-value{color:var(--green);}
+  .stat-card.total .stat-value{color:var(--accent2);}
+  .stat-icon{position:absolute;top:14px;left:14px;font-size:18px;opacity:.25;}
+  .stat-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+
+  /* CHARTS */
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+  .chart-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:18px;}
+  .chart-card.full{grid-column:1/-1;}
+  .chart-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:14px;}
+  .chart-wrap{position:relative;height:190px;}
+
+  /* CLOSE MONTH */
+  .close-month-banner{background:linear-gradient(135deg,rgba(245,200,66,.1),rgba(245,200,66,.05));border:1px solid rgba(245,200,66,.3);border-radius:var(--radius);padding:18px 20px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+  .banner-text h3{font-size:15px;font-weight:700;color:var(--gold);margin-bottom:3px;}
+  .banner-text p{font-size:12px;color:var(--text2);}
+
+  /* FORM */
+  .add-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:22px;margin-bottom:18px;}
+  .form-title{font-size:16px;font-weight:700;margin-bottom:18px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .form-group{display:flex;flex-direction:column;gap:5px;}
+  .form-group.full{grid-column:1/-1;}
+  .form-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+  .form-input,.form-select,.form-textarea{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius3);color:var(--text);font-family:var(--font);font-size:14px;padding:11px 13px;transition:var(--tr);outline:none;width:100%;direction:rtl;}
+  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,.13);}
+  .form-select option{background:var(--bg2);color:var(--text);}
+  .form-textarea{resize:vertical;min-height:65px;}
+  .btn{border:none;border-radius:var(--radius2);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;padding:11px 18px;transition:var(--tr);display:flex;align-items:center;gap:7px;justify-content:center;white-space:nowrap;}
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--purple));color:#fff;box-shadow:0 4px 14px rgba(108,99,255,.4);}
+  .btn-primary:hover{box-shadow:0 6px 20px rgba(108,99,255,.55);transform:translateY(-1px);}
+  .btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+  .btn-gold{background:linear-gradient(135deg,var(--gold),#e0b030);color:#1a1000;font-size:14px;padding:12px 22px;border-radius:var(--radius);}
+  .btn-gold:hover{box-shadow:0 6px 20px rgba(245,200,66,.5);transform:translateY(-2px);}
+  .btn-edit{background:var(--card2);border:1px solid var(--border);color:var(--text2);font-size:13px;padding:8px 12px;}
+  .btn-edit:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-danger{background:var(--card2);border:1px solid var(--red);color:var(--red);font-size:13px;padding:8px 12px;}
+  .btn-danger:hover{background:var(--red);color:#fff;}
+  .form-actions{display:flex;gap:9px;margin-top:16px;}
+
+  /* TABLE */
+  .table-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;margin-bottom:18px;}
+  .table-header{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap;}
+  .table-title{font-size:15px;font-weight:700;}
+  .table-controls{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}
+  .search-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius3);color:var(--text);font-family:var(--font);font-size:13px;padding:8px 13px;width:170px;outline:none;transition:var(--tr);direction:rtl;}
+  .search-box:focus{border-color:var(--accent);}
+  .filter-select{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius3);color:var(--text2);font-family:var(--font);font-size:12px;padding:8px 10px;outline:none;cursor:pointer;}
+  table{width:100%;border-collapse:collapse;}
+  thead tr{background:var(--bg2);}
+  th{padding:11px 14px;text-align:right;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);}
+  td{padding:13px 14px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:var(--bg2);}
+  .cat-badge{display:inline-flex;align-items:center;gap:4px;background:var(--bg3);border-radius:20px;padding:4px 9px;font-size:11px;font-weight:500;border:1px solid var(--border);}
+  .amount-cell{font-weight:700;font-family:var(--font2);font-size:14px;}
+  .amount-expense{color:var(--red);}
+  .amount-savings{color:var(--green);}
+  .date-cell{color:var(--text2);font-size:12px;}
+  .note-cell{color:var(--text2);font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .actions-cell{display:flex;gap:5px;}
+  .empty-state{text-align:center;padding:50px 20px;color:var(--text3);}
+  .empty-icon{font-size:44px;margin-bottom:10px;opacity:.5;}
+
+  /* CAT BREAKDOWN */
+  .cat-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:18px;}
+  .cat-item{background:var(--card);border-radius:var(--radius2);border:1px solid var(--border);padding:12px 14px;display:flex;align-items:center;gap:10px;transition:var(--tr);}
+  .cat-item:hover{border-color:var(--border2);transform:translateX(-2px);}
+  .cat-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .cat-info{flex:1;min-width:0;}
+  .cat-name{font-size:12px;font-weight:600;margin-bottom:3px;}
+  .cat-bar-wrap{background:var(--bg2);border-radius:3px;height:3px;overflow:hidden;}
+  .cat-bar{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+  .cat-amount{font-size:13px;font-weight:700;font-family:var(--font2);flex-shrink:0;}
+
+  /* ARCHIVE */
+  .archive-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .archive-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:18px;cursor:pointer;transition:var(--tr);position:relative;overflow:hidden;}
+  .archive-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--purple));transform:scaleX(0);transition:transform .3s;transform-origin:right;}
+  .archive-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--accent);}
+  .archive-card:hover::after{transform:scaleX(1);transform-origin:left;}
+  .archive-month{font-size:16px;font-weight:700;margin-bottom:3px;}
+  .archive-year{font-size:11px;color:var(--text3);margin-bottom:10px;}
+  .archive-stats{display:flex;gap:14px;}
+  .archive-stat{font-size:11px;color:var(--text2);}
+  .archive-stat strong{color:var(--text);display:block;font-size:13px;}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .3s;}
+  .modal-overlay.show{opacity:1;pointer-events:all;}
+  .modal{background:var(--card);border-radius:var(--radius);border:1px solid var(--border2);padding:24px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;transform:translateY(18px) scale(.97);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:0 24px 64px rgba(0,0,0,.5);}
+  .modal-overlay.show .modal{transform:translateY(0) scale(1);}
+  .modal-title{font-size:17px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;}
+  .modal-close{background:var(--bg2);border:1px solid var(--border);width:30px;height:30px;border-radius:8px;cursor:pointer;color:var(--text2);font-size:15px;display:flex;align-items:center;justify-content:center;transition:var(--tr);}
+  .modal-close:hover{background:var(--red);color:#fff;border-color:var(--red);}
+  .modal-actions{display:flex;gap:9px;margin-top:18px;}
+
+  /* NOTIF */
+  .notif{position:fixed;top:72px;left:50%;transform:translateX(-50%) translateY(-18px);z-index:300;background:var(--card);border:1px solid var(--border2);border-radius:var(--radius2);padding:12px 20px;font-size:13px;font-weight:600;min-width:200px;text-align:center;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:all .3s cubic-bezier(.4,0,.2,1);}
+  .notif.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .notif.success{border-color:var(--green);color:var(--green);}
+  .notif.info{border-color:var(--accent);color:var(--accent);}
+  .notif.warning{border-color:var(--gold);color:var(--gold);}
+  .notif.error{border-color:var(--red);color:var(--red);}
+
+  /* PAGINATION */
+  .pagination{display:flex;gap:5px;justify-content:center;padding:12px;flex-wrap:wrap;}
+  .page-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text2);cursor:pointer;font-size:12px;font-family:var(--font);transition:var(--tr);display:flex;align-items:center;justify-content:center;}
+  .page-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .page-btn:hover:not(.active){border-color:var(--accent);color:var(--accent);}
+
+  /* LOADING SPINNER */
+  .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ARCHIVE SUMMARY */
+  .archive-summary{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;padding:12px;background:var(--bg2);border-radius:var(--radius2);}
+  .archive-summary-item{font-size:12px;color:var(--text2);}
+  .archive-summary-item strong{display:block;font-size:15px;font-weight:700;font-family:var(--font2);}
+  .archive-table-wrap{overflow-x:auto;}
+
+  /* RESPONSIVE */
+  @media(max-width:600px){
+    .stats-grid{grid-template-columns:1fr 1fr;}
+    .stats-grid .stat-card:last-child{grid-column:1/-1;}
+    .charts-grid{grid-template-columns:1fr;}
+    .form-grid{grid-template-columns:1fr;}
+    .cat-breakdown{grid-template-columns:1fr;}
+    .archive-grid{grid-template-columns:1fr;}
+    .search-box{width:100%;}
+    .close-month-banner{flex-direction:column;text-align:center;}
+    table{display:block;overflow-x:auto;}
+  }
+  @media(max-width:380px){
+    .stats-grid{grid-template-columns:1fr;}
+    .stats-grid .stat-card:last-child{grid-column:auto;}
+    .nav-tab{font-size:11px;padding:7px 9px;}
+  }
+
+  /* OFFLINE BANNER */
+  .offline-banner{background:rgba(255,92,122,.1);border:1px solid rgba(255,92,122,.3);border-radius:var(--radius2);padding:10px 16px;margin-bottom:14px;font-size:13px;color:var(--red);text-align:center;display:none;}
+  .offline-banner.show{display:block;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-logo">💰</div>
+  <div class="login-title">مصاريفي</div>
+  <div class="login-sub">تتبع مصاريفك من أي جهاز — الجوال أو اللابتوب — بمزامنة فورية مع Google Sheets</div>
+  <div class="login-features">
+    <div class="login-feature"><span>☁️</span><span>مزامنة فورية بين جميع أجهزتك</span></div>
+    <div class="login-feature"><span>📊</span><span>بياناتك محفوظة في Google Sheets</span></div>
+    <div class="login-feature"><span>🔐</span><span>خاص بك تماماً — لا أحد يشاركك</span></div>
+  </div>
+  <button class="google-btn" onclick="signIn()">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+    تسجيل الدخول بـ Google
+  </button>
+  <div style="font-size:11px;color:var(--text3);text-align:center;max-width:280px;line-height:1.7">
+    سيطلب منك الإذن للوصول إلى Google Sheets فقط لحفظ بياناتك
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif"></div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="brand-icon">💰</div>
+    <div class="brand-name">مصاريفي</div>
+  </div>
+  <div class="topbar-right">
+    <div class="sync-label">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncLabel">—</span>
+    </div>
+    <div class="month-badge" id="currentMonthBadge">—</div>
+    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+    <button class="icon-btn" onclick="manualSync()" title="مزامنة الآن">🔄</button>
+    <img class="user-avatar" id="userAvatar" src="" alt="User" onclick="signOut()" title="تسجيل الخروج">
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- OFFLINE BANNER -->
+  <div class="offline-banner" id="offlineBanner">⚠️ أنت غير متصل بالإنترنت — ستتم المزامنة عند العودة</div>
+
+  <!-- TABS -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchPage('dashboard',this)">📊 الرئيسية</button>
+    <button class="nav-tab" onclick="switchPage('add',this)">➕ إضافة</button>
+    <button class="nav-tab" onclick="switchPage('transactions',this)">📋 العمليات</button>
+    <button class="nav-tab" onclick="switchPage('archive',this)">🗂️ الأرشيف</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="close-month-banner">
+      <div class="banner-text">
+        <h3>🔒 إغلاق الشهر وبدء دورة جديدة</h3>
+        <p>أرشفة الشهر الحالي والبدء بصفحة جديدة</p>
+      </div>
+      <button class="btn btn-gold" onclick="showCloseMonthModal()">نزل الراتب 💸</button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card expenses"><div class="stat-icon">💸</div><div class="stat-label">إجمالي المصاريف</div><div class="stat-value" id="totalExpenses">0.00</div><div class="stat-sub" id="expenseCount">0 عملية</div></div>
+      <div class="stat-card savings"><div class="stat-icon">🏦</div><div class="stat-label">إجمالي التوفير</div><div class="stat-value" id="totalSavings">0.00</div><div class="stat-sub" id="savingsCount">0 عملية</div></div>
+      <div class="stat-card total"><div class="stat-icon">📊</div><div class="stat-label">المجموع الكلي</div><div class="stat-value" id="totalAll">0.00</div><div class="stat-sub">مصاريف + توفير</div></div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-title">🥧 توزيع التصنيفات</div><div class="chart-wrap"><canvas id="catChart"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">📈 مصاريف الشهر</div><div class="chart-wrap"><canvas id="dailyChart"></canvas></div></div>
+      <div class="chart-card full"><div class="chart-title">📉 مقارنة التصنيفات</div><div class="chart-wrap"><canvas id="barChart"></canvas></div></div>
+    </div>
+    <div class="cat-breakdown" id="catBreakdown"></div>
+  </div>
+
+  <!-- ADD -->
+  <div class="page" id="page-add">
+    <div class="add-card">
+      <div class="form-title">➕ إضافة عملية جديدة</div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">التاريخ</label><input type="date" class="form-input" id="txDate"></div>
+        <div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input type="number" class="form-input" id="txAmount" placeholder="0.00" step="0.01" min="0"></div>
+        <div class="form-group full"><label class="form-label">التصنيف</label>
+          <select class="form-select" id="txCategory">
+            <option value="">-- اختر التصنيف --</option>
+            <option>مصاريفي</option><option>مقاضي</option><option>مشتريات البيت</option>
+            <option>بنزين</option><option>مطاعم</option><option>فواتير</option>
+            <option>ترفيه</option><option>توفير</option><option>مصاريف عامة</option>
+          </select>
+        </div>
+        <div class="form-group full"><label class="form-label">ملاحظة (اختياري)</label><textarea class="form-textarea" id="txNote" placeholder="أضف تفاصيل..."></textarea></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" id="addBtn" onclick="addTransaction()" style="flex:1">💾 حفظ العملية</button>
+        <button class="btn btn-edit" onclick="clearForm()">🗑️ مسح</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSACTIONS -->
+  <div class="page" id="page-transactions">
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">📋 جميع العمليات</div>
+        <div class="table-controls">
+          <input type="text" class="search-box" placeholder="🔍 بحث..." id="searchInput" oninput="filterTransactions()">
+          <select class="filter-select" id="filterCat" onchange="filterTransactions()">
+            <option value="">كل التصنيفات</option>
+            <option>مصاريفي</option><option>مقاضي</option><option>مشتريات البيت</option>
+            <option>بنزين</option><option>مطاعم</option><option>فواتير</option>
+            <option>ترفيه</option><option>توفير</option><option>مصاريف عامة</option>
+          </select>
+          <select class="filter-select" id="filterMonth" onchange="filterTransactions()"><option value="">كل الأشهر</option></select>
+          <select class="filter-select" id="filterSort" onchange="filterTransactions()">
+            <option value="newest">الأحدث</option><option value="oldest">الأقدم</option>
+            <option value="highest">الأعلى</option><option value="lowest">الأقل</option>
+          </select>
+          <button class="btn btn-edit" onclick="exportCSV()" style="font-size:12px">📤 تصدير</button>
+        </div>
+      </div>
+      <div id="txTableWrap"><div class="empty-state"><div class="empty-icon">📭</div><p>لا توجد عمليات</p></div></div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+  <!-- ARCHIVE -->
+  <div class="page" id="page-archive">
+    <div style="margin-bottom:14px"><h2 style="font-size:16px;font-weight:700">🗂️ أرشيف الأشهر السابقة</h2></div>
+    <div class="archive-grid" id="archiveGrid"><div style="text-align:center;padding:50px;color:var(--text3);grid-column:1/-1"><div style="font-size:44px;margin-bottom:10px;opacity:.4">🗂️</div><p>لا يوجد أرشيف بعد</p></div></div>
+  </div>
+
+</div><!-- end main -->
+</div><!-- end app -->
+
+<!-- MODALS -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title">✏️ تعديل العملية <button class="modal-close" onclick="closeModal('editModal')">✕</button></div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">التاريخ</label><input type="date" class="form-input" id="editDate"></div>
+      <div class="form-group"><label class="form-label">المبلغ</label><input type="number" class="form-input" id="editAmount" step="0.01"></div>
+      <div class="form-group full"><label class="form-label">التصنيف</label>
+        <select class="form-select" id="editCategory">
+          <option>مصاريفي</option><option>مقاضي</option><option>مشتريات البيت</option>
+          <option>بنزين</option><option>مطاعم</option><option>فواتير</option>
+          <option>ترفيه</option><option>توفير</option><option>مصاريف عامة</option>
+        </select>
+      </div>
+      <div class="form-group full"><label class="form-label">ملاحظة</label><textarea class="form-textarea" id="editNote"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="saveEdit()" style="flex:1">💾 حفظ</button>
+      <button class="btn btn-edit" onclick="closeModal('editModal')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="closeMonthModal">
+  <div class="modal">
+    <div class="modal-title">🔒 إغلاق الشهر <button class="modal-close" onclick="closeModal('closeMonthModal')">✕</button></div>
+    <div id="closeMonthSummary" style="margin-bottom:16px"></div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.8">سيتم أرشفة الشهر الحالي والبدء بشهر جديد.<br><strong style="color:var(--gold)">⚠️ لا يمكن التراجع.</strong></p>
+    <div class="modal-actions">
+      <button class="btn btn-gold" onclick="closeMonth()" style="flex:1">✅ تأكيد الإغلاق</button>
+      <button class="btn btn-edit" onclick="closeModal('closeMonthModal')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-title">🗑️ حذف العملية <button class="modal-close" onclick="closeModal('deleteModal')">✕</button></div>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:16px">هل أنت متأكد؟ لا يمكن التراجع.</p>
+    <div class="modal-actions">
+      <button class="btn" onclick="confirmDelete()" style="flex:1;background:var(--red);color:#fff">🗑️ حذف</button>
+      <button class="btn btn-edit" onclick="closeModal('deleteModal')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="archiveDetailModal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-title"><span id="archiveDetailTitle">—</span><button class="modal-close" onclick="closeModal('archiveDetailModal')">✕</button></div>
+    <div id="archiveDetailContent"></div>
+    <div class="modal-actions"><button class="btn btn-edit" onclick="closeModal('archiveDetailModal')" style="flex:1">إغلاق</button></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════
+const CLIENT_ID   = '676002934486-jpks3fg29vm0rt1f9t7a2fcfchk8l00p.apps.googleusercontent.com';
+const SHEET_ID    = '1vQHi1-gRO2ZvRt_tVYYNz3mVjIb-BIXZdh7nuamc114';
+const SCOPES      = 'https://www.googleapis.com/auth/spreadsheets';
+const TX_SHEET    = 'العمليات';
+const ARCH_SHEET  = 'الأرشيف';
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let accessToken   = null;
+let userProfile   = null;
+let transactions  = [];
+let archive       = [];
+let currentMonth  = '';
+let editingRow    = null; // 1-based sheet row
+let deletingRow   = null;
+let currentPage   = 1;
+const PER_PAGE    = 15;
+let charts        = {};
+let syncTimeout   = null;
+let pendingOps    = []; // offline queue
+
+const ARABIC_MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const CATEGORIES = [
+  {name:'مصاريفي',emoji:'👤'},{name:'مقاضي',emoji:'🛒'},{name:'مشتريات البيت',emoji:'🏠'},
+  {name:'بنزين',emoji:'⛽'},{name:'مطاعم',emoji:'🍽️'},{name:'فواتير',emoji:'📄'},
+  {name:'ترفيه',emoji:'🎮'},{name:'توفير',emoji:'💚'},{name:'مصاريف عامة',emoji:'💰'}
+];
+const CAT_COLORS = ['#ff7eb3','#7ee8ff','#a8ff78','#ffb347','#ff6b6b','#c39bd3','#85c1e9','#00d4a0','#f9ca24'];
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+const fmt = n => isNaN(parseFloat(n)) ? '0.00' : parseFloat(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtDate = d => { if(!d) return ''; const dt=new Date(d+'T00:00:00'); return `${dt.getDate()} ${ARABIC_MONTHS[dt.getMonth()]} ${dt.getFullYear()}`; };
+const getMonthKey = () => { const n=new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`; };
+const monthLabel = k => { const [y,m]=k.split('-'); return `${ARABIC_MONTHS[parseInt(m)-1]} ${y}`; };
+const getCat = name => CATEGORIES.find(c=>c.name===name)||{emoji:'💰',name};
+const genId = () => Date.now().toString(36)+Math.random().toString(36).substr(2,5);
+const isOnline = () => navigator.onLine;
+
+// ═══════════════════════════════════════════
+// LOCAL CACHE (offline support)
+// ═══════════════════════════════════════════
+function saveLocal() {
+  localStorage.setItem('masarifi_txs', JSON.stringify(transactions));
+  localStorage.setItem('masarifi_arch', JSON.stringify(archive));
+  localStorage.setItem('masarifi_month', currentMonth);
+}
+function loadLocal() {
+  try {
+    transactions = JSON.parse(localStorage.getItem('masarifi_txs')||'[]');
+    archive      = JSON.parse(localStorage.getItem('masarifi_arch')||'[]');
+    currentMonth = localStorage.getItem('masarifi_month')||getMonthKey();
+  } catch(e){ transactions=[]; archive=[]; currentMonth=getMonthKey(); }
+}
+
+// ═══════════════════════════════════════════
+// GOOGLE AUTH
+// ═══════════════════════════════════════════
+function signIn() {
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if (resp.error) { notify('خطأ في تسجيل الدخول: '+resp.error,'error'); return; }
+      accessToken = resp.access_token;
+      // Get user info
+      try {
+        const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers:{ Authorization:'Bearer '+accessToken }
+        });
+        userProfile = await r.json();
+        document.getElementById('userAvatar').src = userProfile.picture || '';
+      } catch(e){}
+      onSignedIn();
+    }
+  });
+  client.requestAccessToken({ prompt:'consent' });
+}
+
+function signOut() {
+  if(!confirm('هل تريد تسجيل الخروج؟')) return;
+  accessToken = null; userProfile = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').classList.remove('hide');
+  google.accounts.oauth2.revoke(accessToken, ()=>{});
+}
+
+async function onSignedIn() {
+  document.getElementById('loginScreen').classList.add('hide');
+  setTimeout(()=>{ document.getElementById('app').style.display='block'; },500);
+  loadLocal();
+  updateMonthBadge();
+  setSyncStatus('syncing','جاري التحميل...');
+  await ensureSheetsExist();
+  await pullFromSheets();
+  updateStats(); renderCatBreakdown(); setTimeout(rebuildCharts,150);
+}
+
+// ═══════════════════════════════════════════
+// SHEETS API HELPERS
+// ═══════════════════════════════════════════
+async function sheetsGet(range) {
+  const r = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}`,
+    { headers:{ Authorization:'Bearer '+accessToken } }
+  );
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function sheetsAppend(range, values) {
+  const r = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+    { method:'POST', headers:{ Authorization:'Bearer '+accessToken,'Content-Type':'application/json' },
+      body: JSON.stringify({ values }) }
+  );
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function sheetsUpdate(range, values) {
+  const r = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
+    { method:'PUT', headers:{ Authorization:'Bearer '+accessToken,'Content-Type':'application/json' },
+      body: JSON.stringify({ values }) }
+  );
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function sheetsClear(range) {
+  const r = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}:clear`,
+    { method:'POST', headers:{ Authorization:'Bearer '+accessToken } }
+  );
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function sheetsGetInfo() {
+  const r = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}`,
+    { headers:{ Authorization:'Bearer '+accessToken } }
+  );
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function addSheet(title) {
+  const r = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`,
+    { method:'POST', headers:{ Authorization:'Bearer '+accessToken,'Content-Type':'application/json' },
+      body: JSON.stringify({ requests:[{ addSheet:{ properties:{ title } } }] }) }
+  );
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+// ═══════════════════════════════════════════
+// ENSURE SHEETS & HEADERS EXIST
+// ═══════════════════════════════════════════
+async function ensureSheetsExist() {
+  try {
+    const info = await sheetsGetInfo();
+    const names = info.sheets.map(s=>s.properties.title);
+
+    if (!names.includes(TX_SHEET)) {
+      await addSheet(TX_SHEET);
+      await sheetsAppend(`${TX_SHEET}!A1`,
+        [['المعرف','التاريخ','المبلغ','التصنيف','الملاحظة','الشهر','وقت الإنشاء']]);
+    }
+    if (!names.includes(ARCH_SHEET)) {
+      await addSheet(ARCH_SHEET);
+      await sheetsAppend(`${ARCH_SHEET}!A1`,
+        [['الشهر','التسمية','المصاريف','التوفير','عدد العمليات','تاريخ الإغلاق','البيانات']]);
+    }
+  } catch(e){ console.error('ensureSheets',e); }
+}
+
+// ═══════════════════════════════════════════
+// PULL DATA FROM SHEETS
+// ═══════════════════════════════════════════
+async function pullFromSheets() {
+  try {
+    // Transactions
+    const txData = await sheetsGet(`${TX_SHEET}!A2:G`);
+    const rows = txData.values || [];
+    transactions = rows.filter(r=>r[0]).map(r => ({
+      id:       r[0]||'',
+      date:     r[1]||'',
+      amount:   parseFloat(r[2])||0,
+      category: r[3]||'',
+      note:     r[4]||'',
+      monthKey: r[5]||'',
+      createdAt:parseInt(r[6])||0,
+      _row: rows.indexOf(r)+2  // 1-based sheet row (header=1)
+    }));
+
+    // Archive
+    const archData = await sheetsGet(`${ARCH_SHEET}!A2:G`);
+    const archRows = archData.values || [];
+    archive = archRows.filter(r=>r[0]).map(r => ({
+      monthKey:     r[0]||'',
+      label:        r[1]||'',
+      totalExpenses:parseFloat(r[2])||0,
+      totalSavings: parseFloat(r[3])||0,
+      count:        parseInt(r[4])||0,
+      closedAt:     parseInt(r[5])||0,
+      transactions: (() => { try{ return JSON.parse(r[6]||'[]'); }catch(e){ return []; } })()
+    }));
+
+    // Month
+    currentMonth = localStorage.getItem('masarifi_month') || getMonthKey();
+    saveLocal();
+    setSyncStatus('synced','محدّث');
+    updateStats(); renderCatBreakdown(); setTimeout(rebuildCharts,100);
+    if (document.getElementById('page-transactions').classList.contains('active')) renderTable();
+    if (document.getElementById('page-archive').classList.contains('active')) renderArchive();
+  } catch(e) {
+    console.error('pullFromSheets',e);
+    setSyncStatus('error','خطأ في المزامنة');
+    notify('تعذّر تحميل البيانات','error');
+  }
+}
+
+// ═══════════════════════════════════════════
+// PUSH: ADD ROW
+// ═══════════════════════════════════════════
+async function pushAddTransaction(tx) {
+  await sheetsAppend(`${TX_SHEET}!A:G`, [[
+    tx.id, tx.date, tx.amount, tx.category, tx.note, tx.monthKey, tx.createdAt
+  ]]);
+}
+
+// ═══════════════════════════════════════════
+// PUSH: UPDATE ROW
+// ═══════════════════════════════════════════
+async function pushUpdateTransaction(tx) {
+  if (!tx._row) { await pushFullRewrite(); return; }
+  await sheetsUpdate(`${TX_SHEET}!A${tx._row}:G${tx._row}`, [[
+    tx.id, tx.date, tx.amount, tx.category, tx.note, tx.monthKey, tx.createdAt
+  ]]);
+}
+
+// ═══════════════════════════════════════════
+// PUSH: DELETE ROW (clear it then rewrite)
+// ═══════════════════════════════════════════
+async function pushFullRewrite() {
+  await sheetsClear(`${TX_SHEET}!A2:G`);
+  if (transactions.length === 0) return;
+  await sheetsAppend(`${TX_SHEET}!A2`, transactions.map(t=>[
+    t.id, t.date, t.amount, t.category, t.note, t.monthKey, t.createdAt
+  ]));
+}
+
+async function pushArchive() {
+  await sheetsClear(`${ARCH_SHEET}!A2:G`);
+  if (archive.length === 0) return;
+  await sheetsAppend(`${ARCH_SHEET}!A2`, archive.map(a=>[
+    a.monthKey, a.label, a.totalExpenses, a.totalSavings,
+    a.count, a.closedAt, JSON.stringify(a.transactions)
+  ]));
+}
+
+// ═══════════════════════════════════════════
+// SYNC STATUS
+// ═══════════════════════════════════════════
+function setSyncStatus(state, label) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  dot.className = 'sync-dot ' + state;
+  lbl.textContent = label;
+}
+
+async function manualSync() {
+  if (!accessToken) return;
+  setSyncStatus('syncing','جاري المزامنة...');
+  await pullFromSheets();
+}
+
+// ═══════════════════════════════════════════
+// ONLINE / OFFLINE
+// ═══════════════════════════════════════════
+window.addEventListener('online',  () => {
+  document.getElementById('offlineBanner').classList.remove('show');
+  if (accessToken) manualSync();
+});
+window.addEventListener('offline', () => {
+  document.getElementById('offlineBanner').classList.add('show');
+  setSyncStatus('error','غير متصل');
+});
+
+// ═══════════════════════════════════════════
+// ADD TRANSACTION
+// ═══════════════════════════════════════════
+async function addTransaction() {
+  const date     = document.getElementById('txDate').value;
+  const amountRaw= document.getElementById('txAmount').value;
+  const category = document.getElementById('txCategory').value;
+  const note     = document.getElementById('txNote').value.trim();
+
+  if (!date)                      return notify('اختر التاريخ','warning');
+  if (!amountRaw||parseFloat(amountRaw)<=0) return notify('أدخل مبلغاً صحيحاً','warning');
+  if (!category)                  return notify('اختر التصنيف','warning');
+
+  const amount = parseFloat(amountRaw);
+  const tx = { id:genId(), date, amount, category, note,
+               monthKey:currentMonth, createdAt:Date.now() };
+
+  const btn = document.getElementById('addBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> جاري الحفظ...';
+
+  transactions.push(tx);
+  saveLocal(); updateStats(); renderCatBreakdown();
+
+  try {
+    setSyncStatus('syncing','جاري الحفظ...');
+    await pushAddTransaction(tx);
+    // Re-pull to get correct _row numbers
+    await pullFromSheets();
+    setSyncStatus('synced','تم الحفظ ✓');
+    notify('✅ تمت الإضافة وحُفظت في Sheets','success');
+    clearForm();
+    setTimeout(()=>{ document.querySelector('[onclick*="transactions"]').click(); },600);
+  } catch(e) {
+    setSyncStatus('error','خطأ في الحفظ');
+    notify('حُفظ محلياً — سيُزامن لاحقاً','warning');
+    console.error(e);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '💾 حفظ العملية';
+}
+
+function clearForm() {
+  document.getElementById('txDate').value     = new Date().toISOString().split('T')[0];
+  document.getElementById('txAmount').value   = '';
+  document.getElementById('txCategory').value = '';
+  document.getElementById('txNote').value     = '';
+}
+
+// ═══════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════
+function updateStats() {
+  const cur  = transactions.filter(t=>t.monthKey===currentMonth);
+  const exp  = cur.filter(t=>t.category!=='توفير');
+  const sav  = cur.filter(t=>t.category==='توفير');
+  const tExp = exp.reduce((s,t)=>s+t.amount,0);
+  const tSav = sav.reduce((s,t)=>s+t.amount,0);
+  document.getElementById('totalExpenses').textContent = fmt(tExp)+' ر.س';
+  document.getElementById('totalSavings').textContent  = fmt(tSav)+' ر.س';
+  document.getElementById('totalAll').textContent      = fmt(tExp+tSav)+' ر.س';
+  document.getElementById('expenseCount').textContent  = exp.length+' عملية';
+  document.getElementById('savingsCount').textContent  = sav.length+' عملية';
+}
+
+// ═══════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════
+let darkMode = localStorage.getItem('masarifi_theme') !== 'light';
+
+function rebuildCharts() {
+  Object.values(charts).forEach(c=>{ try{c.destroy();}catch(e){} });
+  charts={};
+  const cur  = transactions.filter(t=>t.monthKey===currentMonth);
+  const exp  = cur.filter(t=>t.category!=='توفير');
+  const tick = darkMode?'#6060a0':'#8080a0';
+  const grid = darkMode?'rgba(255,255,255,0.04)':'rgba(0,0,0,0.06)';
+  const opts = { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ labels:{ color:tick, font:{family:"'IBM Plex Sans Arabic'"},boxWidth:11 } } } };
+
+  // PIE
+  const catTotals={};
+  CATEGORIES.filter(c=>c.name!=='توفير').forEach(c=>{ catTotals[c.name]=0; });
+  exp.forEach(t=>{ catTotals[t.category]=(catTotals[t.category]||0)+t.amount; });
+  const catK=Object.keys(catTotals).filter(k=>catTotals[k]>0);
+  charts.cat=new Chart(document.getElementById('catChart').getContext('2d'),{
+    type:'doughnut',
+    data:{ labels:catK,
+           datasets:[{ data:catK.map(k=>catTotals[k]),
+             backgroundColor:catK.map(k=>CAT_COLORS[CATEGORIES.findIndex(c=>c.name===k)]||'#ccc'),
+             borderColor:darkMode?'#1a1a2e':'#fff',borderWidth:2,hoverOffset:7 }] },
+    options:{...opts,cutout:'65%',plugins:{...opts.plugins,
+      tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed)} ر.س`}}}}
+  });
+
+  // LINE
+  const dayMap={};
+  exp.forEach(t=>{ dayMap[t.date]=(dayMap[t.date]||0)+t.amount; });
+  const days=Object.keys(dayMap).sort();
+  charts.daily=new Chart(document.getElementById('dailyChart').getContext('2d'),{
+    type:'line',
+    data:{ labels:days.map(d=>{ const dt=new Date(d+'T00:00:00');return `${dt.getDate()}/${dt.getMonth()+1}`;}),
+           datasets:[{ label:'المصاريف اليومية',data:days.map(d=>dayMap[d]),
+             borderColor:'#6c63ff',backgroundColor:'rgba(108,99,255,0.15)',
+             fill:true,tension:.4,pointBackgroundColor:'#6c63ff',pointRadius:4 }] },
+    options:{...opts,plugins:{...opts.plugins,tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.y)} ر.س`}}},
+      scales:{x:{ticks:{color:tick,font:{size:10}},grid:{color:grid}},
+              y:{ticks:{color:tick},grid:{color:grid}}}}
+  });
+
+  // BAR
+  const allCat={};
+  CATEGORIES.forEach(c=>{ allCat[c.name]=0; });
+  cur.forEach(t=>{ allCat[t.category]=(allCat[t.category]||0)+t.amount; });
+  charts.bar=new Chart(document.getElementById('barChart').getContext('2d'),{
+    type:'bar',
+    data:{ labels:CATEGORIES.map(c=>c.emoji+' '+c.name),
+           datasets:[{ label:'المبلغ (ر.س)',data:CATEGORIES.map(c=>allCat[c.name]),
+             backgroundColor:CAT_COLORS.map(c=>c+'cc'),borderColor:CAT_COLORS,
+             borderWidth:1,borderRadius:5 }] },
+    options:{...opts,plugins:{...opts.plugins,tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.y)} ر.س`}}},
+      scales:{x:{ticks:{color:tick,font:{size:10}},grid:{display:false}},
+              y:{ticks:{color:tick},grid:{color:grid}}}}
+  });
+}
+
+function renderCatBreakdown() {
+  const cur=transactions.filter(t=>t.monthKey===currentMonth);
+  const exp=cur.filter(t=>t.category!=='توفير');
+  const total=exp.reduce((s,t)=>s+t.amount,0);
+  const catTotals={};
+  exp.forEach(t=>{ catTotals[t.category]=(catTotals[t.category]||0)+t.amount; });
+  const sorted=Object.entries(catTotals).sort((a,b)=>b[1]-a[1]);
+  const el=document.getElementById('catBreakdown');
+  if(!sorted.length){el.innerHTML='';return;}
+  el.innerHTML=sorted.map(([name,amt])=>{
+    const i=CATEGORIES.findIndex(c=>c.name===name);
+    const clr=CAT_COLORS[i]||'#ccc';
+    const cat=getCat(name);
+    const pct=total>0?(amt/total*100).toFixed(1):0;
+    return `<div class="cat-item">
+      <div class="cat-dot" style="background:${clr}"></div>
+      <div class="cat-info">
+        <div class="cat-name">${cat.emoji} ${name}</div>
+        <div class="cat-bar-wrap"><div class="cat-bar" style="width:${pct}%;background:${clr}"></div></div>
+      </div>
+      <div class="cat-amount" style="color:${clr}">${fmt(amt)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// TABLE
+// ═══════════════════════════════════════════
+function getFiltered() {
+  const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
+  const cat=document.getElementById('filterCat')?.value||'';
+  const month=document.getElementById('filterMonth')?.value||'';
+  const sort=document.getElementById('filterSort')?.value||'newest';
+  let list=[...transactions];
+  if(q) list=list.filter(t=>t.category.includes(q)||(t.note&&t.note.toLowerCase().includes(q))||String(t.amount).includes(q));
+  if(cat) list=list.filter(t=>t.category===cat);
+  if(month) list=list.filter(t=>t.monthKey===month);
+  list.sort((a,b)=>{
+    if(sort==='newest') return b.createdAt-a.createdAt;
+    if(sort==='oldest') return a.createdAt-b.createdAt;
+    if(sort==='highest') return b.amount-a.amount;
+    return a.amount-b.amount;
+  });
+  return list;
+}
+
+function updateMonthFilter() {
+  const sel=document.getElementById('filterMonth');
+  if(!sel) return;
+  const months=[...new Set(transactions.map(t=>t.monthKey))].sort().reverse();
+  sel.innerHTML='<option value="">كل الأشهر</option>'+months.map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join('');
+}
+
+function renderTable() {
+  updateMonthFilter();
+  const list=getFiltered();
+  const total=list.length;
+  const totalPages=Math.max(1,Math.ceil(total/PER_PAGE));
+  if(currentPage>totalPages) currentPage=totalPages;
+  const page=list.slice((currentPage-1)*PER_PAGE,currentPage*PER_PAGE);
+  const wrap=document.getElementById('txTableWrap');
+  if(!page.length){
+    wrap.innerHTML=`<div class="empty-state"><div class="empty-icon">📭</div><p>لا توجد عمليات</p></div>`;
+    document.getElementById('pagination').innerHTML='';return;
+  }
+  wrap.innerHTML=`<div style="overflow-x:auto"><table>
+    <thead><tr><th>التاريخ</th><th>التصنيف</th><th>المبلغ</th><th>ملاحظة</th><th>إجراءات</th></tr></thead>
+    <tbody>${page.map(t=>{
+      const cat=getCat(t.category);
+      const isSav=t.category==='توفير';
+      return `<tr>
+        <td class="date-cell">${fmtDate(t.date)}</td>
+        <td><span class="cat-badge"><span>${cat.emoji}</span>${t.category}</span></td>
+        <td class="amount-cell ${isSav?'amount-savings':'amount-expense'}">${fmt(t.amount)} ر.س</td>
+        <td class="note-cell" title="${t.note||''}">${t.note||'—'}</td>
+        <td><div class="actions-cell">
+          <button class="btn btn-edit" onclick="openEdit('${t.id}')">✏️</button>
+          <button class="btn btn-danger" onclick="openDelete('${t.id}')">🗑️</button>
+        </div></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+  const pg=document.getElementById('pagination');
+  if(totalPages<=1){pg.innerHTML='';return;}
+  pg.innerHTML=[...Array(totalPages)].map((_,i)=>
+    `<button class="page-btn ${i+1===currentPage?'active':''}" onclick="goPage(${i+1})">${i+1}</button>`
+  ).join('');
+}
+
+function goPage(n){currentPage=n;renderTable();}
+function filterTransactions(){currentPage=1;renderTable();}
+
+// ═══════════════════════════════════════════
+// EDIT
+// ═══════════════════════════════════════════
+function openEdit(id) {
+  const tx=transactions.find(t=>t.id===id);
+  if(!tx) return;
+  editingRow=tx.id;
+  document.getElementById('editDate').value    =tx.date;
+  document.getElementById('editAmount').value  =tx.amount;
+  document.getElementById('editCategory').value=tx.category;
+  document.getElementById('editNote').value    =tx.note||'';
+  openModal('editModal');
+}
+
+async function saveEdit() {
+  const date    =document.getElementById('editDate').value;
+  const amount  =parseFloat(document.getElementById('editAmount').value);
+  const category=document.getElementById('editCategory').value;
+  const note    =document.getElementById('editNote').value.trim();
+  if(!date||!amount||!category) return notify('اكمل البيانات','warning');
+
+  const idx=transactions.findIndex(t=>t.id===editingRow);
+  if(idx===-1) return;
+  transactions[idx]={...transactions[idx],date,amount,category,note};
+  saveLocal(); updateStats(); renderTable(); renderCatBreakdown();
+  closeModal('editModal');
+
+  try {
+    setSyncStatus('syncing','جاري التحديث...');
+    await pushUpdateTransaction(transactions[idx]);
+    await pullFromSheets();
+    setSyncStatus('synced','تم التحديث ✓');
+    notify('✅ تم التعديل','success');
+  } catch(e){ setSyncStatus('error','خطأ'); notify('تعذّر التحديث في Sheets','error'); }
+}
+
+// ═══════════════════════════════════════════
+// DELETE
+// ═══════════════════════════════════════════
+function openDelete(id){ deletingRow=id; openModal('deleteModal'); }
+
+async function confirmDelete() {
+  transactions=transactions.filter(t=>t.id!==deletingRow);
+  saveLocal(); updateStats(); renderTable(); renderCatBreakdown();
+  closeModal('deleteModal');
+  try {
+    setSyncStatus('syncing','جاري الحذف...');
+    await pushFullRewrite();
+    setSyncStatus('synced','تم الحذف ✓');
+    notify('🗑️ تم الحذف','info');
+  } catch(e){ setSyncStatus('error','خطأ'); notify('تعذّر الحذف من Sheets','error'); }
+}
+
+// ═══════════════════════════════════════════
+// CLOSE MONTH
+// ═══════════════════════════════════════════
+function showCloseMonthModal() {
+  const cur=transactions.filter(t=>t.monthKey===currentMonth);
+  const exp=cur.filter(t=>t.category!=='توفير').reduce((s,t)=>s+t.amount,0);
+  const sav=cur.filter(t=>t.category==='توفير').reduce((s,t)=>s+t.amount,0);
+  document.getElementById('closeMonthSummary').innerHTML=`
+    <div class="archive-summary">
+      <div class="archive-summary-item"><strong>${monthLabel(currentMonth)}</strong>الشهر الحالي</div>
+      <div class="archive-summary-item"><strong style="color:var(--red)">${fmt(exp)} ر.س</strong>المصاريف</div>
+      <div class="archive-summary-item"><strong style="color:var(--green)">${fmt(sav)} ر.س</strong>التوفير</div>
+      <div class="archive-summary-item"><strong>${cur.length}</strong>عملية</div>
+    </div>`;
+  openModal('closeMonthModal');
+}
+
+async function closeMonth() {
+  const cur=transactions.filter(t=>t.monthKey===currentMonth);
+  const exp=cur.filter(t=>t.category!=='توفير').reduce((s,t)=>s+t.amount,0);
+  const sav=cur.filter(t=>t.category==='توفير').reduce((s,t)=>s+t.amount,0);
+
+  archive.unshift({
+    monthKey:currentMonth, label:monthLabel(currentMonth),
+    totalExpenses:exp, totalSavings:sav,
+    count:cur.length, closedAt:Date.now(),
+    transactions:cur
+  });
+
+  const [y,m]=currentMonth.split('-').map(Number);
+  currentMonth=m===12?`${y+1}-01`:`${y}-${String(m+1).padStart(2,'0')}`;
+  localStorage.setItem('masarifi_month',currentMonth);
+  saveLocal(); updateStats(); renderCatBreakdown(); updateMonthBadge();
+  closeModal('closeMonthModal');
+
+  try {
+    setSyncStatus('syncing','جاري الأرشفة...');
+    await pushArchive();
+    setSyncStatus('synced','تم الإغلاق ✓');
+    notify(`✅ تم إغلاق الشهر | الشهر الجديد: ${monthLabel(currentMonth)}`,'success');
+  } catch(e){ setSyncStatus('error','خطأ'); notify('تعذّر الأرشفة في Sheets','error'); }
+}
+
+// ═══════════════════════════════════════════
+// ARCHIVE
+// ═══════════════════════════════════════════
+function renderArchive() {
+  const grid=document.getElementById('archiveGrid');
+  if(!archive.length){
+    grid.innerHTML=`<div style="text-align:center;padding:50px;color:var(--text3);grid-column:1/-1"><div style="font-size:44px;margin-bottom:10px;opacity:.4">🗂️</div><p>لا يوجد أرشيف بعد</p></div>`;
+    return;
+  }
+  grid.innerHTML=archive.map((a,i)=>`
+    <div class="archive-card" onclick="showArchiveDetail(${i})">
+      <div class="archive-month">${a.label}</div>
+      <div class="archive-year">${a.count} عملية · ${new Date(a.closedAt).toLocaleDateString('ar-SA')}</div>
+      <div class="archive-stats">
+        <div class="archive-stat"><strong style="color:var(--red)">${fmt(a.totalExpenses)}</strong>مصاريف</div>
+        <div class="archive-stat"><strong style="color:var(--green)">${fmt(a.totalSavings)}</strong>توفير</div>
+        <div class="archive-stat"><strong style="color:var(--accent2)">${fmt(a.totalExpenses+a.totalSavings)}</strong>المجموع</div>
+      </div>
+    </div>`).join('');
+}
+
+function showArchiveDetail(idx) {
+  const a=archive[idx];
+  document.getElementById('archiveDetailTitle').textContent=`📅 ${a.label}`;
+  const rows=(a.transactions||[]).map(t=>{
+    const cat=getCat(t.category);
+    const isSav=t.category==='توفير';
+    return `<tr><td class="date-cell">${fmtDate(t.date)}</td>
+      <td><span class="cat-badge">${cat.emoji} ${t.category}</span></td>
+      <td class="amount-cell ${isSav?'amount-savings':'amount-expense'}">${fmt(t.amount)} ر.س</td>
+      <td class="note-cell">${t.note||'—'}</td></tr>`;
+  }).join('');
+  document.getElementById('archiveDetailContent').innerHTML=`
+    <div class="archive-summary">
+      <div class="archive-summary-item"><strong style="color:var(--red)">${fmt(a.totalExpenses)} ر.س</strong>المصاريف</div>
+      <div class="archive-summary-item"><strong style="color:var(--green)">${fmt(a.totalSavings)} ر.س</strong>التوفير</div>
+      <div class="archive-summary-item"><strong style="color:var(--accent2)">${fmt(a.totalExpenses+a.totalSavings)} ر.س</strong>المجموع</div>
+      <div class="archive-summary-item"><strong>${a.count}</strong>عملية</div>
+    </div>
+    ${rows?`<div class="archive-table-wrap"><table>
+      <thead><tr><th>التاريخ</th><th>التصنيف</th><th>المبلغ</th><th>ملاحظة</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`:'<p style="color:var(--text3);text-align:center;padding:20px">لا توجد عمليات</p>'}`;
+  openModal('archiveDetailModal');
+}
+
+// ═══════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════
+function exportCSV() {
+  const list=getFiltered();
+  if(!list.length) return notify('لا توجد بيانات','warning');
+  const rows=[['التاريخ','التصنيف','المبلغ','ملاحظة','الشهر']];
+  list.forEach(t=>rows.push([t.date,t.category,t.amount,t.note||'',monthLabel(t.monthKey)]));
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download=`مصاريفي_${monthLabel(currentMonth)}.csv`;
+  a.click();
+  notify('📤 تم التصدير','success');
+}
+
+// ═══════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════
+function switchPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='dashboard'){rebuildCharts();renderCatBreakdown();}
+  if(id==='transactions'){currentPage=1;renderTable();}
+  if(id==='archive') renderArchive();
+}
+
+function toggleTheme() {
+  darkMode=!darkMode;
+  document.body.classList.toggle('light-mode',!darkMode);
+  document.getElementById('themeBtn').textContent=darkMode?'🌙':'☀️';
+  localStorage.setItem('masarifi_theme',darkMode?'dark':'light');
+  rebuildCharts();
+}
+
+function updateMonthBadge() {
+  document.getElementById('currentMonthBadge').textContent=monthLabel(currentMonth);
+}
+
+function openModal(id){ document.getElementById(id).classList.add('show'); document.body.style.overflow='hidden'; }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); document.body.style.overflow=''; }
+
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  el.addEventListener('click',e=>{ if(e.target===el) closeModal(el.id); });
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') ['editModal','deleteModal','closeMonthModal','archiveDetailModal'].forEach(closeModal);
+});
+
+function notify(msg, type='info') {
+  const el=document.getElementById('notif');
+  el.textContent=msg; el.className=`notif ${type} show`;
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>el.classList.remove('show'),3500);
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+function init() {
+  document.body.classList.toggle('light-mode',!darkMode);
+  document.getElementById('themeBtn').textContent=darkMode?'🌙':'☀️';
+  document.getElementById('txDate').value=new Date().toISOString().split('T')[0];
+  if(!isOnline()) document.getElementById('offlineBanner').classList.add('show');
+}
+
+init();
+</script>
+</body>
+</html>
