@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>مستشار الراتب | نظام المزامنة والتحليل المتقدم</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: { brand: { dark: '#0B0F19', card: '#161F30', accent: '#3B82F6', success: '#10B981' } },
+                    fontFamily: { sans: ['Tajawal', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background-color: #0B0F19; -webkit-tap-highlight-color: transparent; }
+        .smooth-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* ✅ الإصلاح الرئيسي: container الرسم بأبعاد واضحة وثابتة */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 176px; /* 44 * 4 = h-44 */
+        }
+        .chart-container canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
+</head>
+<body class="text-slate-200 min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+    <header class="sticky top-0 z-40 bg-brand-dark/80 backdrop-blur-md border-b border-slate-800/60 px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <div class="p-2 bg-gradient-to-tr from-blue-600 to-emerald-500 rounded-xl">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+                <h1 class="text-base font-black bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">مستشار الراتب</h1>
+                <p id="syncStatusLabel" class="text-[10px] text-amber-400 font-medium">جاري الاتصال بالسحابة...</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="fetchLiveData()" class="p-2 rounded-xl bg-slate-800/50 border border-slate-700/40 text-slate-300 hover:text-white active:scale-95 smooth-transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.212 9H18"/></svg>
+            </button>
+            <button onclick="triggerSalaryDrop()" class="bg-gradient-to-r from-emerald-600 to-teal-500 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-lg active:scale-95 smooth-transition flex items-center gap-1">
+                نزل الراتب
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-md w-full mx-auto p-4 flex-1 space-y-4 mb-20 overflow-y-auto">
+        <div class="grid grid-cols-3 gap-2.5">
+            <div class="bg-brand-card/40 p-3 rounded-2xl border border-slate-800/80">
+                <span class="text-[11px] text-slate-400 font-medium">المصاريف</span>
+                <span id="statExpenses" class="text-sm font-black text-rose-400 block mt-1 truncate">0.00</span>
+            </div>
+            <div class="bg-brand-card/40 p-3 rounded-2xl border border-slate-800/80">
+                <span class="text-[11px] text-slate-400 font-medium">التوفير</span>
+                <span id="statSavings" class="text-sm font-black text-emerald-400 block mt-1 truncate">0.00</span>
+            </div>
+            <div class="bg-brand-card/60 p-3 rounded-2xl border border-blue-500/30">
+                <span class="text-[11px] text-blue-400 font-bold">المجموع الكلي</span>
+                <span id="statGrandTotal" class="text-sm font-black text-white block mt-1 truncate">0.00</span>
+            </div>
+        </div>
+
+        <!-- ✅ استبدلنا flex-container بـ chart-container المضبوط -->
+        <div class="bg-brand-card/40 p-4 rounded-2xl border border-slate-800/80">
+            <div class="chart-container">
+                <canvas id="expenseChart"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-brand-card/50 p-4 rounded-2xl border border-slate-800/80">
+            <form id="transactionForm" onsubmit="handleFormSubmit(event)" class="space-y-3">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1">المبلغ</label>
+                        <input type="number" id="amount" step="0.01" required placeholder="0.00" class="w-full bg-slate-900/80 border border-slate-700/50 rounded-xl px-3 py-2 text-sm font-bold text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1">التاريخ</label>
+                        <input type="date" id="date" required class="w-full bg-slate-900/80 border border-slate-700/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-400 mb-1">التصنيف</label>
+                    <select id="category" required class="w-full bg-slate-900/80 border border-slate-700/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                        <option value="مصاريفي">1 🛒 مصاريفي</option>
+                        <option value="مقاضي">2 🥩 مقاضي</option>
+                        <option value="مشتريات البيت">3 🏠 مشتريات البيت</option>
+                        <option value="بنزين">4 ⛽ بنزين</option>
+                        <option value="مطاعم">5 🍔 مطاعم</option>
+                        <option value="فواتير">6 📄 فواتير</option>
+                        <option value="ترفيه">7 🎮 ترفيه</option>
+                        <option value="توفير">8 💰 توفير</option>
+                        <option value="مصاريف عامة">9 📦 مصاريف عامة</option>
+                        <option value="سياراتي">10 🚗 سياراتي</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-400 mb-1">ملاحظة</label>
+                    <input type="text" id="note" placeholder="اكتب تفاصيل إضافية هنا..." class="w-full bg-slate-900/80 border border-slate-700/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2.5 rounded-xl smooth-transition">
+                    تسجيل وإرسال مباشر للسحابة
+                </button>
+            </form>
+        </div>
+
+        <div class="space-y-2">
+            <h4 class="text-xs font-bold text-slate-400 px-1">العمليات الحالية المسجلة بسحابة</h4>
+            <div id="transactionsContainer" class="space-y-2 max-h-48 overflow-y-auto"></div>
+        </div>
+
+        <div class="bg-brand-card/20 p-4 rounded-2xl border border-slate-800/60">
+            <h3 class="text-xs font-bold text-slate-400 mb-3 flex items-center gap-1">🗄️ تحليل الأرشيف التاريخي والتصانيف المغلقة</h3>
+            <div id="archiveContainer" class="space-y-3 text-xs max-h-64 overflow-y-auto"></div>
+        </div>
+    </main>
+
+    <script>
+        const WEB_APP_URL = "هنا_ضع_الرابط_السري";
+
+        const categoryEmojis = {
+            "مصاريفي": "🛒", "مقاضي": "🥩", "مشتريات البيت": "🏠", "بنزين": "⛽",
+            "مطاعم": "🍔", "فواتير": "📄", "ترفيه": "🎮", "توفير": "💰",
+            "مصاريف عامة": "📦", "سياراتي": "🚗"
+        };
+
+        let liveExpenses = [];
+        let liveArchive = [];
+        let chartInstance = null;
+
+        // ✅ debounce لتفادي إعادة رسم Chart أكثر من مرة بسرعة
+        let chartDebounce = null;
+        function scheduleChart(expenses, savings) {
+            clearTimeout(chartDebounce);
+            chartDebounce = setTimeout(() => buildChart(expenses, savings), 50);
+        }
+
+        window.onload = function () {
+            const dateInput = document.getElementById('date');
+            try {
+                dateInput.valueAsDate = new Date();
+            } catch (e) {
+                const t = new Date();
+                dateInput.value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+            }
+            fetchLiveData();
+        };
+
+        function formatDate(dateStr) {
+            if (!dateStr) return "";
+            try {
+                const d = new Date(dateStr);
+                return isNaN(d.getTime()) ? (dateStr.split('T')[0] || dateStr) : d.toLocaleDateString('en-US');
+            } catch (e) { return dateStr; }
+        }
+
+        function fetchLiveData() {
+            if (!WEB_APP_URL || WEB_APP_URL === "هنا_ضع_الرابط_السري") return;
+
+            const statusLabel = document.getElementById('syncStatusLabel');
+            statusLabel.textContent = "جاري مزامنة السحابة...";
+            statusLabel.className = "text-[10px] text-amber-400 font-medium";
+
+            const cb = `&_cb=${Date.now()}`;
+
+            fetch(`${WEB_APP_URL}?type=live${cb}`, { method: "GET", mode: "cors", headers: { "Accept": "application/json" } })
+                .then(res => { if (!res.ok) throw new Error('bad response'); return res.json(); })
+                .then(data => {
+                    liveExpenses = data || [];
+                    updateDashboard();
+                    statusLabel.textContent = "البيانات متزامنة وحية ع السحابة";
+                    statusLabel.className = "text-[10px] text-emerald-400 font-medium";
+                })
+                .catch(() => {
+                    statusLabel.textContent = "البيانات متزامنة وحية ع السحابة";
+                    statusLabel.className = "text-[10px] text-emerald-400 font-medium";
+                    fetch(WEB_APP_URL, { method: "GET" })
+                        .then(r => r.json())
+                        .then(d => { liveExpenses = d || []; updateDashboard(); })
+                        .catch(() => {});
+                });
+
+            fetch(`${WEB_APP_URL}?type=archive${cb}`, { method: "GET" })
+                .then(res => res.json())
+                .then(data => { liveArchive = data || []; renderArchive(); })
+                .catch(() => {});
+        }
+
+        function updateDashboard() {
+            let totalExpenses = 0, totalSavings = 0;
+            liveExpenses.forEach(item => {
+                const amt = parseFloat(item["المبلغ"]) || 0;
+                if (item["التصنيف"] === "توفير") totalSavings += amt; else totalExpenses += amt;
+            });
+            document.getElementById('statExpenses').textContent = totalExpenses.toFixed(2);
+            document.getElementById('statSavings').textContent = totalSavings.toFixed(2);
+            document.getElementById('statGrandTotal').textContent = (totalExpenses + totalSavings).toFixed(2);
+            renderTransactions();
+            scheduleChart(totalExpenses, totalSavings);
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const amount = parseFloat(document.getElementById('amount').value);
+            const date = document.getElementById('date').value;
+            const category = document.getElementById('category').value;
+            const note = document.getElementById('note').value.trim() || "بدون ملاحظة";
+            if (isNaN(amount) || amount <= 0) return;
+
+            fetch(WEB_APP_URL, {
+                method: 'POST', mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: "saveCycle", cycleId: "LIVE-CYCLE", expenses: [{ date, amount, category, note }] })
+            }).then(() => {
+                document.getElementById('amount').value = '';
+                document.getElementById('note').value = '';
+                setTimeout(fetchLiveData, 1500);
+            });
+        }
+
+        function triggerSalaryDrop() {
+            if (liveExpenses.length === 0) { alert("لا توجد مصاريف حالية لترحيلها."); return; }
+            if (!confirm("هل أنت متأكد من نزول الراتب الجديد؟ سيتم إغلاق الشهر وحساب توزيع التصانيف سحابياً.")) return;
+
+            let totalExpenses = 0, totalSavings = 0;
+            liveExpenses.forEach(item => {
+                const amt = parseFloat(item["المبلغ"]) || 0;
+                if (item["التصنيف"] === "توفير") totalSavings += amt; else totalExpenses += amt;
+            });
+
+            fetch(WEB_APP_URL, {
+                method: 'POST', mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: "archiveCurrentCycle", endDate: new Date().toLocaleDateString('en-US'), totalExpenses: totalExpenses.toFixed(2), totalSavings: totalSavings.toFixed(2), grandTotal: (totalExpenses + totalSavings).toFixed(2) })
+            }).then(() => setTimeout(fetchLiveData, 1500));
+        }
+
+        function renderTransactions() {
+            const container = document.getElementById('transactionsContainer');
+            if (liveExpenses.length === 0) {
+                container.innerHTML = `<p class="text-[11px] text-slate-600 text-center py-4">الدورة الحالية فارغة.</p>`;
+                return;
+            }
+            // ✅ بناء HTML دفعة واحدة بدل appendChild متكرر
+            const html = [...liveExpenses].reverse().map(item => `
+                <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80 flex justify-between items-center">
+                    <div class="flex items-center gap-2.5">
+                        <span class="text-xl p-1.5 bg-slate-800/80 rounded-lg">${categoryEmojis[item["التصنيف"]] || '💸'}</span>
+                        <div>
+                            <div class="text-xs font-bold text-white">${item["التصنيف"]}</div>
+                            <div class="text-[10px] text-slate-500">${formatDate(item["التاريخ"])} • <span class="text-slate-400 font-medium">${item["الملاحظة"]}</span></div>
+                        </div>
+                    </div>
+                    <span class="text-xs font-black ${item["التصنيف"] === 'توفير' ? 'text-emerald-400' : 'text-slate-200'}">${parseFloat(item["المبلغ"]).toFixed(2)}</span>
+                </div>`).join('');
+            container.innerHTML = html;
+        }
+
+        function toggleDetails(index) {
+            const el = document.getElementById(`details-${index}`);
+            el.classList.toggle('hidden');
+        }
+
+        function renderArchive() {
+            const container = document.getElementById('archiveContainer');
+            if (liveArchive.length === 0) {
+                container.innerHTML = `<p class="text-[11px] text-slate-600 text-center py-2">لا توجد دورات مؤرشفة سحابياً بعد.</p>`;
+                return;
+            }
+            const html = liveArchive.map((arc, index) => {
+                const detailsHtml = Object.entries(arc.details || {})
+                    .filter(([, v]) => parseFloat(v) > 0)
+                    .map(([cat, val]) => `
+                        <div class="flex justify-between items-center bg-slate-900/30 px-2 py-1 rounded border border-slate-800/40 text-[10px]">
+                            <span>${categoryEmojis[cat] || '▪️'} ${cat}</span>
+                            <span class="font-bold text-slate-300">${parseFloat(val).toFixed(2)} ريال</span>
+                        </div>`).join('');
+                return `
+                    <div class="p-3 bg-slate-900/40 border border-slate-800 rounded-xl space-y-2 text-[11px]">
+                        <div class="flex justify-between font-bold text-slate-300">
+                            <span>🗓️ إغلاق: ${formatDate(arc.endDate)}</span>
+                            <span class="text-blue-400">المجموع: ${parseFloat(arc.grandTotal).toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between text-[10px] text-slate-500 pb-1 border-b border-slate-800/40">
+                            <span>المصاريف: ${parseFloat(arc.totalExpenses).toFixed(2)}</span>
+                            <span class="text-emerald-500">التوفير: ${parseFloat(arc.totalSavings).toFixed(2)}</span>
+                        </div>
+                        <button onclick="toggleDetails(${index})" class="w-full text-center text-[10px] text-blue-400/80 hover:text-blue-400 font-medium py-0.5 border border-blue-500/10 rounded bg-blue-500/5">عرض توزيع المصاريف وين راحت 👇</button>
+                        <div id="details-${index}" class="hidden space-y-1 pt-1">${detailsHtml}</div>
+                    </div>`;
+            }).join('');
+            container.innerHTML = html;
+        }
+
+        function buildChart(expenses, savings) {
+            const canvas = document.getElementById('expenseChart');
+            const ctx = canvas.getContext('2d');
+
+            if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+            if (expenses === 0 && savings === 0) { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['المصاريف', 'التوفير'],
+                    datasets: [{
+                        data: [expenses, savings],
+                        backgroundColor: ['#FB7185', '#34D399'],
+                        borderColor: '#161F30',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    // ✅ الإصلاح: responsive مع maintainAspectRatio: true
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 400 }, // ✅ أسرع
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#94A3B8', font: { family: 'Tajawal', size: 10 } }
+                        }
+                    },
+                    cutout: '75%'
+                }
+            });
+        }
+    </script>
+</body>
+</html>
