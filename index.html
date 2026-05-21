@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>مستشار الراتب | المزامنة الحية السحابية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { dark: '#0B0F19', card: '#161F30', accent: '#3B82F6', success: '#10B981' }
+                    },
+                    fontFamily: { sans: ['Tajawal', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght text-400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background-color: #0B0F19; -webkit-tap-highlight-color: transparent; }
+        .smooth-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    </style>
+</head>
+<body class="text-slate-200 min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+    <header class="sticky top-0 z-40 bg-brand-dark/80 backdrop-blur-md border-b border-slate-800/60 px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <div class="p-2 bg-gradient-to-tr from-blue-600 to-emerald-500 rounded-xl">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+                <h1 class="text-base font-black bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">مستشار الراتب الذكي</h1>
+                <p id="syncStatusLabel" class="text-[10px] text-amber-400 font-medium">جاري جلب البيانات الحية...</p>
+            </div>
+        </div>
+        <button onclick="fetchLiveData()" class="p-2 rounded-xl bg-slate-800/50 border border-slate-700/40 text-slate-300 hover:text-white active:scale-95 smooth-transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.212 9H18"/></svg>
+        </button>
+    </header>
+
+    <main class="max-w-md w-full mx-auto p-4 flex-1 space-y-4 mb-20 overflow-y-auto">
+        <div class="grid grid-cols-3 gap-2.5">
+            <div class="bg-brand-card/40 p-3 rounded-2xl border border-slate-800/80 backdrop-blur-sm">
+                <span class="text-[11px] text-slate-400 font-medium">المصاريف</span>
+                <span id="statExpenses" class="text-sm font-black text-rose-400 block mt-1 truncate">0.00</span>
+            </div>
+            <div class="bg-brand-card/40 p-3 rounded-2xl border border-slate-800/80 backdrop-blur-sm">
+                <span class="text-[11px] text-slate-400 font-medium">التوفير</span>
+                <span id="statSavings" class="text-sm font-black text-emerald-400 block mt-1 truncate">0.00</span>
+            </div>
+            <div class="bg-brand-card/60 p-3 rounded-2xl border border-blue-500/30 backdrop-blur-sm">
+                <span class="text-[11px] text-blue-400 font-bold">المجموع الكلي</span>
+                <span id="statGrandTotal" class="text-sm font-black text-white block mt-1 truncate">0.00</span>
+            </div>
+        </div>
+
+        <div class="bg-brand-card/40 p-4 rounded-2xl border border-slate-800/80 backdrop-blur-sm">
+            <div class="relative w-full h-44 flex items-center justify-center">
+                <canvas id="expenseChart" class="max-h-full max-w-full"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-brand-card/50 p-4 rounded-2xl border border-slate-800/80 backdrop-blur-sm">
+            <form id="transactionForm" onsubmit="handleFormSubmit(event)" class="space-y-3">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1">المبلغ</label>
+                        <input type="number" id="amount" step="0.01" required placeholder="0.00" class="w-full bg-slate-900/80 border border-slate-700/50 rounded-xl px-3 py-2 text-sm font-bold text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1">التاريخ</label>
+                        <input type="date" id="date" required class="w-full bg-slate-900/80 border border-slate-700/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-400 mb-1">التصنيف</label>
+                    <select id="category" required class="w-full bg-slate-900/80 border border-slate-700/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                        <option value="مصاريفي">1 🛒 مصاريفي</option>
+                        <option value="مقاضي">2 🥩 مقاضي</option>
+                        <option value="مشتريات البيت">3 🏠 مشتريات البيت</option>
+                        <option value="بنزين">4 ⛽ بنزين</option>
+                        <option value="مطاعم">5 🍔 مطاعم</option>
+                        <option value="فواتير">6 📄 فواتير</option>
+                        <option value="ترفيه">7 🎮 ترفيه</option>
+                        <option value="توفير">8 💰 توفير</option>
+                        <option value="مصاريف عامة">9 📦 مصاريف عامة</option>
+                        <option value="سياراتي">10 🚗 سياراتي</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-400 mb-1">ملاحظة</label>
+                    <input type="text" id="note" placeholder="اكتب تفاصيل إضافية هنا..." class="w-full bg-slate-900/80 border border-slate-700/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2.5 rounded-xl active:scale-[0.98] smooth-transition">
+                    تسجيل وإرسال مباشر للسحابة
+                </button>
+            </form>
+        </div>
+
+        <div class="space-y-2">
+            <h4 class="text-xs font-bold text-slate-400 px-1">العمليات المسجلة بالسحابة (الحالية)</h4>
+            <div id="transactionsContainer" class="space-y-2 max-h-64 overflow-y-auto"></div>
+        </div>
+    </main>
+
+    <footer class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-brand-dark/95 border-t border-slate-850 backdrop-blur-lg px-4 py-3 flex justify-around items-center z-50">
+        <div class="text-[11px] text-slate-400 flex items-center gap-1.5 w-full justify-center">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>وضع المزامنة الفورية النشط (بين كل الأجهزة)</span>
+        </div>
+    </footer>
+
+    <script>
+        // احقن الرابط الخاص بك بالأسفل بين علامتي التنصيص
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxkNaQEYV06YM9K84dgR3fqqboAlix06Df_n_bRHobtu8MdeZYKATt71Joe7D5T8nE/exec";
+
+        const categoryEmojis = {
+            "مصاريفي": "🛒", "مقاضي": "🥩", "مشتريات البيت": "🏠", "بنزين": "⛽", 
+            "مطاعم": "🍔", "فواتير": "📄", "ترفيه": "🎮", "توفير": "💰", 
+            "مصاريف عامة": "📦", "سياراتي": "🚗"
+        };
+
+        let liveExpenses = [];
+        let chartInstance = null;
+
+        window.onload = function() {
+            document.getElementById('date').valueAsDate = new Date();
+            fetchLiveData();
+        };
+
+        function fetchLiveData() {
+            if(!WEB_APP_URL || WEB_APP_URL === "هنا_ضع_الرابط_السري") {
+                document.getElementById('syncStatusLabel').innerText = "لم يتم ربط رابط السحابة بعد!";
+                return;
+            }
+            document.getElementById('syncStatusLabel').innerText = "جاري جلب البيانات المحدثة...";
+            document.getElementById('syncStatusLabel').className = "text-[10px] text-amber-400 font-medium animate-pulse";
+
+            // جلب البيانات من شيت "العمليات" عبر الـ doGet
+            fetch(WEB_APP_URL)
+            .then(res => res.json())
+            .then(data => {
+                // الكود في الـ Apps Script معدل ليعيد بيانات شيت العمليات
+                // إذا أرجع مصفوفة، سنفلترها للدورة الحالية أو نعرض آخر العمليات المفتوحة
+                liveExpenses = data || [];
+                updateDashboard();
+                document.getElementById('syncStatusLabel').innerText = "البيانات متزامنة وحية ع السحابة";
+                document.getElementById('syncStatusLabel').className = "text-[10px] text-emerald-400 font-medium";
+            })
+            .catch(err => {
+                document.getElementById('syncStatusLabel').innerText = "أوفلاين - يعرض آخر بيانات محفوظة";
+                document.getElementById('syncStatusLabel').className = "text-[10px] text-rose-400 font-medium";
+            });
+        }
+
+        function updateDashboard() {
+            let totalExpenses = 0.00; let totalSavings = 0.00;
+            liveExpenses.forEach(item => {
+                let amt = parseFloat(item["المبلغ"]) || parseFloat(item.amount) || 0;
+                let cat = item["التصنيف"] || item.category;
+                if(cat === "توفير") { totalSavings += amt; } else { totalExpenses += amt; }
+            });
+            let grandTotal = totalExpenses + totalSavings;
+            document.getElementById('statExpenses').innerText = totalExpenses.toFixed(2);
+            document.getElementById('statSavings').innerText = totalSavings.toFixed(2);
+            document.getElementById('statGrandTotal').innerText = grandTotal.toFixed(2);
+            
+            renderTransactions(); 
+            buildChart(totalExpenses, totalSavings);
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const amount = parseFloat(document.getElementById('amount').value);
+            const date = document.getElementById('date').value;
+            const category = document.getElementById('category').value;
+            const note = document.getElementById('note').value.trim() || "بدون ملاحظة";
+            if (isNaN(amount) || amount <= 0) return;
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true; btn.innerText = "جاري الحفظ المباشر بالسحابة...";
+
+            const payload = { action: "saveCycle", cycleId: "LIVE-CYCLE", endDate: "", totalExpenses: "0", totalSavings: "0", grandTotal: "0", expenses: [{ date: date, amount: amount, category: category, note: note }] };
+
+            fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            .then(() => {
+                document.getElementById('amount').value = ''; document.getElementById('note').value = '';
+                btn.disabled = false; btn.innerText = "تسجيل وإرسال مباشر للسحابة";
+                // نحدث البيانات فورياً بعد ثانيتين لضمان استقرار جوجل شيت
+                setTimeout(fetchLiveData, 1500);
+            })
+            .catch(() => {
+                alert("فشل الاتصال بالسحابة، يرجى التحقق من الشبكة.");
+                btn.disabled = false; btn.innerText = "تسجيل وإرسال مباشر للسحابة";
+            });
+        }
+
+        function renderTransactions() {
+            const container = document.getElementById('transactionsContainer'); container.innerHTML = '';
+            if(liveExpenses.length === 0) { container.innerHTML = `<p class="text-[11px] text-slate-600 text-center py-4">لا توجد عمليات مسجلة بالسحابة حتى الآن.</p>`; return; }
+            
+            // نعرض العمليات من الأحدث للأقدم
+            const reversed = [...liveExpenses].reverse();
+            reversed.forEach(item => {
+                let amt = parseFloat(item["المبلغ"]) || parseFloat(item.amount) || 0;
+                let cat = item["التصنيف"] || item.category;
+                let dt = item["التاريخ"] || item.date;
+                let nt = item["الملاحظة"] || item.note || "بدون ملاحظة";
+                
+                const card = document.createElement('div');
+                card.className = "bg-slate-900/60 p-3 rounded-xl border border-slate-800/80 flex justify-between items-center";
+                card.innerHTML = `<div class="flex items-center gap-2.5"><span class="text-xl p-1.5 bg-slate-800/80 rounded-lg">${categoryEmojis[cat] || '💸'}</span><div><div class="text-xs font-bold text-white">${cat}</div><div class="text-[10px] text-slate-500">${dt} • <span class="text-slate-400 font-medium">${nt}</span></div></div></div><span class="text-xs font-black ${cat === 'توفير' ? 'text-emerald-400' : 'text-slate-200'}">${amt.toFixed(2)}</span>`;
+                container.appendChild(card);
+            });
+        }
+
+        function buildChart(expenses, savings) {
+            const ctx = document.getElementById('expenseChart').getContext('2d');
+            if(chartInstance) { chartInstance.destroy(); }
+            if(expenses === 0 && savings === 0) { ctx.clearRect(0, 0, 200, 200); return; }
+            chartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: ['المصاريف', 'التوفير'], datasets: [{ data: [expenses, savings], backgroundColor: ['#FB7185', '#34D399'], borderColor: '#161F30', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94A3B8', font: { family: 'Tajawal', size: 10 } } } }, cutout: '75%' } });
+        }
+    </script>
+</body>
+</html>
